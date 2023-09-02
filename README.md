@@ -15,7 +15,7 @@ The following instructions are slightly different from the workshop, as they use
 ## Install Istio
 
 ```bash
-bash manifests/install-istio.sh
+bash manifests/install-istio-ingress-egress.sh
 ```
 
 ## (Optional) Configure Azure DNS with wildcard)
