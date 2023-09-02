@@ -1,13 +1,15 @@
 # bsides-krakow-2023
 Repo for Ambient Mesh demo at BSides Krakow 2023
 
+You can follow along with the demo by running your demo environment here: https://play.instruqt.com/soloio/invite/rw9jo7ixgphs (valid for 7 days from 2021-09-22).
 
+The following instructions are slightly different from the workshop, as they use a newer version of Istio and add monitoring capabalities with Kiali, Prometheus and Grafana.
 
 ## Prerequisites
 
 - `Helm` and `kubectl` installed
 - `istioctl` installed and at 1.9.0 or higher
-- A Kubernetes cluster with a CNI plugin (but NO Cilium, yet)
+- A Kubernetes cluster with a CNI plugin (but NO Cilium, yet), preferebly in Azure, tested with Kubernetes version 1.27.3
   
 ## Install Istio
 
@@ -32,6 +34,29 @@ dig any.k8s.computer +short
 ## Install the demo app
 
 ```bash
+APP_NAMESPACE=test
+kubectl create ns ${APP_NAMESPACE}
+kubectl apply -n test -f manifests/app/
+```
+## Test the app without the mesh
+
+```bash
+kubectl -n test exec deploy/sleep -- curl -I -s  http://web-api:8080/ | grep OK
+```
+
+Expose the Web API thru the ingress gateway
+
+```bash
+kubectl apply -n ${APP_NAMESPACE} -f manifests/expose-app/expose-app-gw.yaml
+```
+
+Test it
+
+```bash
+curl -I -s http://web-api.k8s.computer/ | grep OK
+```
+
+
 ## Monitor Istio and proxies
 
 Install Kiali and Prometheus+Grafana
@@ -44,9 +69,11 @@ bash manifests/install-prometheus.sh
 
 ```bash
 kubectl apply -f manifests/svcmon-podmon-istio.yaml
+kubectl apply -f manifests/dashboard.yaml
+
 ```
 
-## Expose Services
+## Expose Monitoring Services
 Expose the monitoring services to the outside world (beware, no authentication is configured!)
 
 ```bash
