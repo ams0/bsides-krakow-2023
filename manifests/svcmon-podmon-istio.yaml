@@ -11,7 +11,8 @@ spec:
     matchExpressions:
     - {key: istio-prometheus-ignore, operator: DoesNotExist}
   namespaceSelector:
-    any: true
+    matchNames:
+      - istio-system
   jobLabel: envoy-stats
   podMetricsEndpoints:
   - port: http-envoy-prom
@@ -55,3 +56,28 @@ spec:
   endpoints:
     - port: http-monitoring
       interval: 15s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: ztunnel-stats-monitor
+  namespace: istio-system
+  labels:
+    monitoring: ztunnel-proxies
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: ztunnel
+    matchExpressions:
+    - {key: istio-prometheus-ignore, operator: DoesNotExist}
+  namespaceSelector:
+    matchNames:
+      - istio-system
+  jobLabel: ztunnel-stats
+  podMetricsEndpoints:
+  - port: ztunnel-stats
+    path: /metrics
+    interval: 15s
+    relabelings:
+    - action: keep

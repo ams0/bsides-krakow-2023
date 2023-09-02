@@ -9,6 +9,7 @@ The following instructions are slightly different from the workshop, as they use
 
 - `Helm` and `kubectl` installed
 - `istioctl` installed and at 1.9.0 or higher
+- `stern` for logs (https://github.com/stern/stern)
 - A Kubernetes cluster with a CNI plugin (but NO Cilium, yet), preferebly in Azure, tested with Kubernetes version 1.27.3
   
 ## Install Istio
@@ -56,6 +57,23 @@ Test it
 curl -I -s http://web-api.k8s.computer/ | grep OK
 ```
 
+## Onboard app to Ambient
+
+Label the namespace and voila'!
+
+```bash
+kubectl label namespace test istio.io/dataplane-mode=ambient
+```
+
+Notice how the pods keep running without disruption!
+
+Check the logs of `istio-cni` to check the routes have been added:
+
+```bash
+stern -n istio-system istio-cni
+```
+
+Let's set up some monitoring now:
 
 ## Monitor Istio and proxies
 
@@ -64,14 +82,15 @@ Install Kiali and Prometheus+Grafana
 ```bash
 bash manifests/helm-install-kiali.sh
 bash manifests/install-prometheus.sh
-
 ```
 
 ```bash
 kubectl apply -f manifests/svcmon-podmon-istio.yaml
 kubectl apply -f manifests/dashboard.yaml
-
 ```
+
+The above setups two ServiceMonitor for the istio-ingressgateway and the control plane, and two PodMonitors
+for the ztunnel and the istio-proxies (in case you want to run both sidecar and sidecarless mode).
 
 ## Expose Monitoring Services
 Expose the monitoring services to the outside world (beware, no authentication is configured!)
@@ -81,3 +100,9 @@ kubectl apply -f manifests/kiali-gw.yaml
 kubectl apply -f manifests/grafana-gw.yaml
 kubectl apply -f manifests/prometheus-gw.yaml
 ```
+
+## Check the traffic flowing thru the ztunnel
+
+Generate traffic
+```bash
+sh traffic-gen.sh
