@@ -1,0 +1,15 @@
+apiVersion: k6.io/v1alpha1
+kind: K6
+metadata:
+  name: k6-web-api
+spec:
+  parallelism: 4
+  cleanup: post
+  script:
+    configMap:
+      name: web-api-loadtest
+      file: web-api-loadtest.js
+  runner:
+    serviceAccountName: k6
+  starter:
+    serviceAccountName: k6

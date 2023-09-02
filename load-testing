@@ -1,0 +1,30 @@
+### Load testing with k6
+
+Install the operator:
+
+```bash
+curl https://raw.githubusercontent.com/grafana/k6-operator/main/bundle.yaml | kubectl apply -f -
+```
+
+Create a ConfigMap for the test script
+
+```bash
+K6_NAMESPACE=k6-operator-system
+APP_NAMESPACE=test
+kubectl create sa -n ${K6_NAMESPACE} k6
+kubectl create configmap web-api-loadtest -n ${K6_NAMESPACE} --from-file manifests/loadtest/web-api-loadtest.js
+```
+
+Add the AuthorizationPolicies for the traffic coming from the K6 pods to the apps in the test namespace:
+
+```bash
+APP_NAMESPACE=test
+kubectl apply -n ${APP_NAMESPACE} -f manifests/loadtest/k6-loadtest-authpolicy.yaml
+```
+
+
+Create a load test
+
+```bash
+kubectl apply -n ${K6_NAMESPACE} -f manifests/loadtest/k6.yaml
+```

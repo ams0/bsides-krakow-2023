@@ -142,6 +142,19 @@ Requests are now allowed:
 ```bash
 curl -I -H "Host: web-api.${DOMAIN_NAME}" "http://${GATEWAY_IP}/"
 ```
+
+You can check also from within the mesh, using first an allowed pod:
+
+```bash
+kubectl -n test exec deploy/sleep -- curl -I -s  http://web-api:8080/
+```
+
+and then from a pod that uses a different service account:
+
+```bash
+kubectl -n test exec deploy/notsleep -- curl -I -s  http://web-api:8080/
+```
+
 ## L7 Authorization Policies
 
 Let's go beyond L4 with L7 policies
