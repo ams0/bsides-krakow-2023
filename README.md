@@ -3,7 +3,7 @@ Repo for Ambient Mesh demo at BSides Krakow 2023
 
 You can follow along with the demo by running your demo environment here: https://play.instruqt.com/soloio/invite/rw9jo7ixgphs (valid for 7 days from 2021-09-22).
 
-The following instructions are slightly different from the workshop, as they use a newer version of Istio and add monitoring capabalities with Kiali, Prometheus and Grafana.
+The following instructions are slightly different from the workshop, as they use a newer version of Istio and add monitoring capabalities with Kiali, Prometheus and Grafana. Slides can be found [here](https://docs.google.com/presentation/d/1g9IH--EvBm7DTLfMIjiggV9lCRMEeGVqEi5yEI7dmlA/edit?usp=sharing).
 
 ## Prerequisites
 
@@ -28,7 +28,7 @@ export DOMAIN_NAME="k8s.computer"
 export DNS_RG="dns"
 
 az network dns record-set a delete -g ${DNS_RG} -z ${DOMAIN_NAME} -n '*' -y
-az network dns record-set a add-record -g ${DNS_RG}s -z  ${DOMAIN_NAME} -n '*' -a $GATEWAY_IP
+az network dns record-set a add-record -g ${DNS_RG} -z  ${DOMAIN_NAME} -n '*' -a $GATEWAY_IP
 dig any.${DOMAIN_NAME} +short
 ```
 
