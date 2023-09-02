@@ -1,1 +1,1 @@
-kubectl -n test exec deploy/sleep -- sh -c 'for i in $(seq 1 1000000); do curl -s -I http://web-api:8080/; done' > /dev/null 2>&1 &
+kubectl -n test exec deploy/sleep -- sh -c 'for i in $(seq 1 1000); do curl -s -I http://web-api:8080/; done' > /dev/null 2>&1 &

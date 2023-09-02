@@ -29,7 +29,7 @@ export DNS_RG="dns"
 
 az network dns record-set a delete -g ${DNS_RG} -z ${DOMAIN_NAME} -n '*' -y
 az network dns record-set a add-record -g ${DNS_RG}s -z  ${DOMAIN_NAME} -n '*' -a $GATEWAY_IP
-dig any.k8s.computer +short
+dig any.${DOMAIN_NAME} +short
 ```
 
 ## Install the demo app
@@ -54,7 +54,7 @@ kubectl apply -n ${APP_NAMESPACE} -f manifests/expose-app/expose-app-gw.yaml
 Test it
 
 ```bash
-curl -I -s http://web-api.k8s.computer/ | grep OK
+curl -I -s http://web-api.${DOMAIN_NAME}/ | grep OK
 ```
 
 ## Onboard app to Ambient
@@ -106,3 +106,73 @@ kubectl apply -f manifests/prometheus-gw.yaml
 Generate traffic
 ```bash
 sh traffic-gen.sh
+```
+
+Open Grafana and Prometheus and check the dashboards. These are some queries you can try:
+
+```promql
+- `istio_requests_total{destination_service="web-api.test.svc.cluster.local"}`
+- `rate(istio_tcp_received_bytes_total{destination_app="web-api"}[5m])``
+```
+
+## L4 Authorization Policies
+
+Deploy a deny all policy for everything in the test namespace:
+
+![L4 Policies](image-1.png)
+
+```bash
+kubectl apply -n ${APP_NAMESPACE} -f manifests/policies/deny-all.yaml
+```
+
+Requests are now blocked:
+
+```bash
+curl -H "Host: web-api.${DOMAIN_NAME}" "http://${GATEWAY_IP}/"
+```
+
+Allow some traffic in:
+
+```bash
+kubectl apply -n ${APP_NAMESPACE} -f manifests/policies/allow-sleep.yaml
+```
+
+Requests are now allowed:
+
+```bash
+curl -I -H "Host: web-api.${DOMAIN_NAME}" "http://${GATEWAY_IP}/"
+```
+## L7 Authorization Policies
+
+Let's go beyond L4 with L7 policies
+
+![L7 Policies](image.png)
+
+```bash
+kubectl apply -n ${APP_NAMESPACE} -f manifests/l7/waypoint.yaml
+```
+
+Check the new waypoint proxy pod (running `envoy`) in the `test` namespace:
+
+```bash
+kubectl -n test get pods -l istio.io/gateway-name=web-api
+kubectl -n test get pods -l istio.io/gateway-name=web-api -o jsonpath='{.items[].spec.containers[0].image}'
+```
+
+
+Allow the `sleep` app to access the `web-api`:
+
+```bash
+kubectl apply -n ${APP_NAMESPACE} -f /manifests/l7/allow-sleep-l7.yaml
+```
+
+Check that now you can send a GET request but not a DELETE call:
+
+```bash
+kubectl -n test exec deploy/sleep -- curl http://web-api:8080/
+kubectl -n test exec deploy/sleep -- curl http://web-api:8080/ -X DELETE
+
+RBAC: access denied
+```
+
+Stay tuned for Fault injection and Traffic shaping!
